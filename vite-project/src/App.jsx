@@ -1,42 +1,51 @@
-import React from "react";
-import Home from "./Home";
-import "./App.css";
-import axios from "axios";
-import { useEffect, useState } from "react";
-export const BACK_ENDPOINT = "https://restcountries.com/v3.1/all";
+import  { useState, useEffect } from 'react';
+import './App.css';
+
 function App() {
-  const getdata = async () => {
-    const url = BACK_ENDPOINT;
-    try {
-      const response = await axios.get(url);
+  const [countries, setCountries] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
-      Setdata(response.data);
-      setFilter(response.data);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-  const [data, Setdata] = useState([]);
-  const[filter,setFilter] = useState([])
   useEffect(() => {
-    getdata();
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all');
+        if (!response.ok) {
+          throw new Error('Failed to fetch countries');
+        }
+        const data = await response.json();
+        setCountries(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
   }, []);
-  const handlechange = (event) => {
-    let search = event.target.value;
-    console.log(search);
-    let filters = data.filter((ele)=>ele.name.common.includes(search)) ;
 
-    setFilter(filters);
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
+
+  const filteredCountries = countries.filter((country) =>
+    country.name.common.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <>
-      <React.StrictMode>
-        <div>
-          <input onChange={handlechange} type="search" />
-        </div>
-        <Home data={filter} />
-      </React.StrictMode>
-    </>
+    <div className="container">
+      <input
+        type="text"
+        placeholder="Search for a country..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+      />
+      <div className="countryGrid">
+        {filteredCountries.map((country) => (
+          <div key={country.cca3} className="countryCard">
+            <img src={country.flags.png} alt={country.name.common} />
+            <p>{country.name.common}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
